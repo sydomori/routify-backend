@@ -1,0 +1,32 @@
+# Environment / secrets
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environments
+venv/
+env/
+.venv/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Flask-Migrate / DB
+*.db
+*.sqlite3
+instance/
+
+# Editors
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
