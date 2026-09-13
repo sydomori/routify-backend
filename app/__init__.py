@@ -14,8 +14,8 @@ def create_app(config_name=None):
     app = Flask(__name__)
     app.config.from_object(config_by_name[config_name])
 
-    __init_extensions(app)
-    __register_blueprints(app)
+    _init_extensions(app)
+    _register_blueprints(app)
 
     @app.get("/api/health")
     def health_check():
@@ -35,4 +35,11 @@ def create_app(config_name=None):
         ), 200
 
     return app
+
+
+def _init_extensions(app):
+    db.init_app(app)
+    migrate.init_app(app,db)
+    jwt.init_app(app)
+    cors.init_app(app,resources={r"/api/*":{"origins":app.config['FRONTEND_ORIGIN']}})
     
