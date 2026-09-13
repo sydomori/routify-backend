@@ -42,4 +42,11 @@ def _init_extensions(app):
     migrate.init_app(app,db)
     jwt.init_app(app)
     cors.init_app(app,resources={r"/api/*":{"origins":app.config['FRONTEND_ORIGIN']}})
+
+
+def _register_blueprints(app):
+    """
+    Register all blueprints for the application.
+    """
+    pass
     
