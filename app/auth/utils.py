@@ -30,3 +30,9 @@ def verify_password(
         return bcrypt.checkpw(plain_password.encode("utf-8"), password_hash.encode("utf-8"))
     except ValueError:
         return False
+
+def generate_temp_password(
+    length:int = 8
+) -> str:
+    """Generate a random temporary password of specified length"""
+    return ''.join(secrets.choice(_TEMP_PASSWORD_ALPHABET) for _ in range(length))
