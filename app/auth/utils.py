@@ -36,3 +36,12 @@ def generate_temp_password(
 ) -> str:
     """Generate a random temporary password of specified length"""
     return ''.join(secrets.choice(_TEMP_PASSWORD_ALPHABET) for _ in range(length))
+
+def normalize_phone(
+    raw_phone:str
+) -> str:
+    """Normalize phone number to E.164 format (e.g., +1234567890)"""
+    cleaned = re.sub(r"[\s\-()]", "", raw_phone or "")
+    if not _PHONE_RE.match(cleaned):
+        raise ValueError(f"Invalid phone number format: {raw_phone}")
+    return cleaned
