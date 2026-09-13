@@ -18,7 +18,7 @@ class User(db.Model):
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False)
     must_change_password = db.Column(db.Boolean, default=True, nullable=False)
-    driver_status = db.Column(db.String(20), nullable=True)
+    driver_status = db.Column(db.String(30), nullable=True)
     is_active = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime(timezone=True), default=utcnow)
 
