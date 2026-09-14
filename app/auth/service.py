@@ -1,0 +1,51 @@
+import logging
+
+from app.extensions import db
+from app.auth.models import User, ROLES, DRIVER_STATUSES
+from app.auth.utils import hash_password, verify_password, generate_password, normalize_phone
+from app.auth.exceptions import(
+    UserNotFoundError,
+    DuplicateUserError,
+    NotADriverError,
+    InvalidDriverStatusError
+)
+
+#control panel for tracking and logging auth service operations
+logger = logging.getLogger(__name__)
+
+def onboard_driver(
+    name:str,
+    phone:str
+) -> User:
+   """
+    Create a driver User with a generated temp password, and driver_status='pending documents'
+    Calls communications.service.send_onboarding_sms()
+   """
+
+   normalized_phone = normalize_phone(phone)
+
+   if User.query.filter_by(phone=normalized_phone).first() is not None:
+       raise DuplicateUserError(f"User with phone {normalized_phone} already exists")
+ 
+
+   temp_password = generate_password()
+
+   driver = User(
+       name=name.strip(),
+       phone=normalized_phone,
+       role="driver",
+       password_hash=hash_password(temp_password),
+       must_change_password=True,
+       driver_status="pending_documents",
+       is_active=True         
+   )
+   db.session.add(driver)
+   db.session.commit()
+
+   _send_onboarding_sms(normalized_phone, temp_password)
+
+   return driver
+
+
+   
+   
