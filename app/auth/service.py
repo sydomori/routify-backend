@@ -143,3 +143,10 @@ def set_driver_status(
     driver = _get_driver_or_raise(driver_id)
     driver.driver_status = status
     db.session.commit()
+
+def deactivate_driver(
+    driver_id:int
+) -> None:
+    driver = _get_driver_or_raise(driver_id)
+    driver.is_active = False
+    db.session.commit()
