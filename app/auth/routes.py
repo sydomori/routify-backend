@@ -112,4 +112,25 @@ def accept_invite_route():
         return jsonify({"error": str(err)}), 400
 
     return jsonify({"message": "Password set successfully - you can now log in.", "user": user_public_schema.dump(user)}), 200
+
+@auth_bp.post("/login")
+def login_route():
+    try:
+        data = login_schema.load(request.get_json(silent=True) or {})  # request.get_json(silent=True) returns None if request body is empty
+    except ValidationError as err:
+        return jsonify({"error":"Invalid input", "details": err.messages}), 400
+
+    user = service.authenticate_user(data["identifier"], data["password"])
+    if user is None:
+        return jsonify({"error":"Invalid credentials"}), 401
+
+    access_token = create_access_token(identity=str(user.id))
+    return jsonify(
+        {
+            "access_token": access_token,
+            "must_change_password": user.must_change_password,
+            "user": user_public_schema.dump(user),
+        }
+    ), 200
+
     
