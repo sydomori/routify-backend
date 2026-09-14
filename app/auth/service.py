@@ -68,5 +68,25 @@ def _send_onboarding_sms(phone:str, temp_password:str):
             phone
         )
 
-   
+def authenticate_user(
+    identifier:str,
+    password:str
+) -> User | None:
+    """
+    Authenticate a user by their identifier (phone for drivers, email for managers) and password.
+    Returns the User object if authentication is successful, otherwise returns None.
+    """
+
+    user = User.query.filter(
+        (User.phone == identifier) | (User.email == identifier)
+    ).first()
+
+    if user is None or not user.is_active:
+        return None
+
+    if not verify_password(password, user.password_hash):
+        return None
+
+    return user
+
    
