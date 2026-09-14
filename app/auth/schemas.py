@@ -8,6 +8,7 @@ class UserPublicSchema(Schema):
         is purely used to shape what goes out over the API
     """
     id = fields.Int(dump_only=True)
+    organization_id = fields.Int(dump_only=True,allow_none=True)
     name = fields.Str(dump_only=True)
     phone = fields.Str(dump_only=True)
     email = fields.Str(dump_only=True, allow_none=True)
