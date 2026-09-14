@@ -33,7 +33,7 @@ def onboard_driver(
        raise DuplicateUserError(f"User with phone {normalized_phone} already exists")
  
 
-   temp_password = generate_password()
+   temp_password = generate_temp_password()
 
    driver = User(
        name=name.strip(),
@@ -193,6 +193,30 @@ def _verify_invite_token(
         raise ValueError("Invalid or expired invite token")
 
     return payload["user_id"]
+
+def _send_manager_invite_email(
+    user:User,
+    invite_link:str
+) -> None:
+    """
+     same soft dependency pattern as _send_onboarding_sms
+     manager is created even if communications.send_email() fails or doesn't exist
+     manager can send invite link manually
+    """
+
+    try:
+        from app.communications.service import send_manager_invite_email
+        send_manager_invite_email(user, invite_link)
+    except ImportError:
+        logger.warning(
+            "Communications module not available yet- invite link for %s was Not sent via email ",
+            user.email
+        )
+    except Exception:
+        logger.exception(
+            "sending manager invite email failed for %s ", 
+            user.email
+        )
 
 
 def authenticate_user(
