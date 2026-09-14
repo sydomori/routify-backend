@@ -89,4 +89,16 @@ def authenticate_user(
 
     return user
 
+def get_user_by_id(user_id:int) -> User:
+    """
+    Retrieve a user by their ID.
+    Raises UserNotFoundError if the user does not exist.
+    """
+
+    user = User.query.get(user_id)
+    if user is None:
+        raise UserNotFoundError(f"No User with id {user_id}")
+    return user
+
+
    
