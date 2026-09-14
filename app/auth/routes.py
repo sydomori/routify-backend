@@ -61,3 +61,34 @@ def bootstrap_manager_route():
         return jsonify({"error": str(err)}), 400
 
     return jsonify(user_public_schema.dump(manager)), 201
+
+@auth_bp.post("/invite-manager")
+@role_required("manager")
+@password_change_required
+def invite_manager_route():
+    try:
+        data = invite_manager_schema.load(request.get_json(silent=True))
+    except ValidationError as err:
+        return jsonify({"error": "Invalid input", "details": err.messages}), 400
+
+    requesting_user_id = int(get_jwt_identity())
+
+    try:
+        requesting_user = service.get_user_by_id(requesting_user_id)
+        invitee = service.invite_manager(
+            name=data["name"],
+            phone=data["phone"],
+            email = data["email"],
+            requesting_user=requesting_user,
+        )
+    except UserNotFoundError as err:
+        return jsonify({"error": str(err)}), 404
+    except PermissionError as err:
+        return jsonify({"error": str(err)}), 403
+    except DuplicateUserError as err:
+        return jsonify({"error": str(err)}), 409
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    return jsonify(user_public_schema.dump(invitee)), 201
+    
