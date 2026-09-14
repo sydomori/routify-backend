@@ -113,7 +113,7 @@ def change_password(
     user.must_change_password = False
     db.session.commit()
 
-def get_driver_or_raise(
+def _get_driver_or_raise(
     driver_id:int
 ) -> User:
     driver = get_user_by_id(driver_id)
@@ -122,3 +122,10 @@ def get_driver_or_raise(
     return driver
 
    
+def get_driver_status(
+    driver_id:int
+) -> str:
+    """Called by trips.service and trucks.service as a guard check. MUST exist — other
+    modules depend on this exact function."""
+    driver = _get_driver_or_raise(driver_id)
+    return driver.driver_status
