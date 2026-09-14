@@ -29,3 +29,7 @@ class LoginSchema(Schema):
 class ChangePasswordSchema(Schema):
     new_password = fields.Str(required=True, load_only=True, validate = validate.Length(min=8))
 
+user_public_schema = UserPublicSchema()
+onboard_driver_schema = OnboardDriverSchema()
+login_schema = LoginSchema()
+change_password_schema = ChangePasswordSchema()
