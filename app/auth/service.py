@@ -1,4 +1,6 @@
 import logging
+from flask import current_app
+from itsdangerous import URLSafeTimedSerializer, BadData
 
 from app.extensions import db
 from app.auth.models import User, ROLES, DRIVER_STATUSES
@@ -12,6 +14,9 @@ from app.auth.exceptions import(
 
 #control panel for tracking and logging auth service operations
 logger = logging.getLogger(__name__)
+
+_INVITE_TOKEN_SALT = "manager-invite"
+_INVITE_TOKEN_MAX_AGE_SECONDS = 48 * 60 * 60
 
 def onboard_driver(
     name:str,
@@ -67,6 +72,38 @@ def _send_onboarding_sms(phone:str, temp_password:str):
             "sending onboarding sms failed for %s ", 
             phone
         )
+
+def bootstrap_first_manager(
+    name:str,
+    phone:str,
+    email:str,
+    password:str
+) -> User:
+    """
+     only callable when no manager exists
+     sets must_change_password to false since no one exists to invite them normally
+     closes permanently the instance one manager exists
+    """
+
+    if User.query.filer_by(role="manager").first() is not None:
+        raise PermissionError("A manager already exists")
+
+    normalized_phone = normalize_phone(phone)
+    _ensure_unique_contact(phone=normalized_phone, email=email)
+
+    manager = User (
+        name=name.strip(),
+        phone=normalized_phone,
+        email=email.strip().lower(),
+        role="manager",
+        password_hash=hash_password(password),
+        must_change_password=False,
+        driver_status=None,
+        is_active=True
+    )
+    db.session.add(manager)
+    db.session.commit()
+    return manager
 
 def authenticate_user(
     identifier:str,
