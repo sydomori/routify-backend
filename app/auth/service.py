@@ -100,5 +100,18 @@ def get_user_by_id(user_id:int) -> User:
         raise UserNotFoundError(f"No User with id {user_id}")
     return user
 
+def change_password(
+    user_id:int,
+    new_password:str
+) -> None:
+    """
+    Sets must_change_password to False and updates the user's password hash.
+    """
+
+    user = get_user_by_id(user_id)
+    user.password_hash = hash_password(new_password)
+    user.must_change_password = False
+    db.session.commit()
+
 
    
