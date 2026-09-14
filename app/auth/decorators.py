@@ -24,3 +24,24 @@ def role_required(*allowed_roles):
         return wrapper
 
     return decorator
+
+def password_change_required(fn):
+    """
+    enforces hard gate for drivers with temporary passwords ie they cant access anything
+    deliberately re-reads must_change_password from db rather than trusting the JWT as the token would stay stale for its full lifecycle
+    even after the DB bool flips to false
+    """
+
+    @wraps(fn)
+    def wrapper(*args,**kwargs):
+        verify_jwt_in_request()
+        try:
+            user= get_user_by_id(int(get_jwt_identity()))
+        except UserNotFoundError:
+            return jsonify({"error":"User not found"}), 404
+
+        if user.must_change_password:
+            return jsonify({"error": "Password change required", "code": "password_change_required"}),404
+        return fn(*args, **kwargs)
+
+    return wrapper
