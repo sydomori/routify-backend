@@ -133,4 +133,23 @@ def login_route():
         }
     ), 200
 
+@auth_bp.post("/change-password")
+@jwt_required
+def change_password_route():
+    try:
+        data = change_password_schema.load(request.get_json(silent=True))
+    except ValidationError as err:
+        return jsonify({"error": "Invalid input", "details": err.messages}), 400
+
+    user_id = int(get_jwt_identity())
+    try:
+        service.change_password(user_id, data=["new_password"])
+    except UserNotFoundError as err:
+        return jsonify({"error": str(err)}), 404
+
+    return jsonify({"message": "Password changed successfully"}), 200
+
+
+
+
     
