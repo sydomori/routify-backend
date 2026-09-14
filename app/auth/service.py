@@ -218,6 +218,15 @@ def _send_manager_invite_email(
             user.email
         )
 
+def _ensure_unique_contact(
+    phone: str,
+    email:str | None = None
+) -> None:
+    """Shared duplicate check"""
+    if User.query.filter_by(phone=phone).first() is not None:
+        raise DuplicateUserError(f"A user with phone '{phone}' already exists")
+    if email is not None and User.query.filter_by(email=email.strip().lower()).first() is not None:
+        raise DuplicateUserError(f"A user with email '{email}' already exists")
 
 def authenticate_user(
     identifier:str,
