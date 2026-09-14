@@ -46,6 +46,27 @@ def onboard_driver(
 
    return driver
 
+def _send_onboarding_sms(phone:str, temp_password:str):
+    """
+     makes sure onboard_driver() doesn't fail if communications service doesn't exist or is down 
+     the driver will still be created, but they won't receive the onboarding SMS
+     manager can relay the temp password manually if needed
+     will call communications.service.send_onboarding_sms(phone, temp_password) once it exists
+    """
+
+    try:
+        from app.communications.service import send_onboarding_sms
+        send_onboarding_sms(phone, temp_password)
+    except ImportError:
+        logger.warning(
+            "Communications module not available yet- temp password for %s was Not sent via sms ",
+            phone
+        )
+    except Exception:
+        logger.exception(
+            "sending onboarding sms failed for %s ", 
+            phone
+        )
 
    
    
