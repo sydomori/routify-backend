@@ -15,7 +15,10 @@ from auth.schemas import (
     change_password_schema,
     login_schema,
     onboard_driver_schema,
-    user_public_schema
+    user_public_schema,
+    accept_invite_schema,
+    bootstrap_manager_schema,
+    invite_manager_schema,
 )
 
 auth_bp = Blueprint("auth", __name__)
@@ -38,3 +41,23 @@ def onboard_driver_route():
         return jsonify({"error": str(err)}), 400
 
     return jsonify(user_public_schema.dump(driver)), 201
+
+@auth_bp.post("/bootstrap-manager")
+def bootstrap_manager_route():
+    try:
+        data = bootstrap_manager_schema.load(request.get_son(silent=True))
+    except ValidationError as err:
+        return jsonify({"error":"Invalid input", "details": err.messages}), 400
+
+    try:
+        manager = service.bootstrap_first_manager(
+            name=data["name"], phone=data["phone"], email=data["email"], password=data["password"]
+        )
+    except PermissionError as err:
+        return jsonify({"error": str(err)}), 403
+    except DuplicateUserError as err:
+        return jsonify({"error": str(err)}), 409
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    return jsonify(user_public_schema.dump(manager)), 201
