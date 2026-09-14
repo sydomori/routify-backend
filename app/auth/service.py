@@ -179,7 +179,20 @@ def _generate_invite_token(
 ) -> str:
     serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
     return serializer.dumps(user_id, salt=_INVITE_TOKEN_SALT)
- 
+
+
+def _verify_invite_token(
+    token:str
+) -> int:
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    try:
+        payload = serializer.loads(
+            token,salt=_INVITE_TOKEN_SALT,max_age=_INVITE_TOKEN_MAX_AGE_SECONDS
+        )
+    except BadData:
+        raise ValueError("Invalid or expired invite token")
+
+    return payload["user_id"]
 
 
 def authenticate_user(
