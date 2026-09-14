@@ -47,5 +47,8 @@ class ChangePasswordSchema(Schema):
 
 user_public_schema = UserPublicSchema()
 onboard_driver_schema = OnboardDriverSchema()
+bootstrap_manager_schema = BootstrapManagerSchema()
+invite_manager_schema = InviteManagerSchema()
+accept_invite_schema = AcceptInviteSchema()
 login_schema = LoginSchema()
 change_password_schema = ChangePasswordSchema()
