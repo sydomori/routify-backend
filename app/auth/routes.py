@@ -149,6 +149,19 @@ def change_password_route():
 
     return jsonify({"message": "Password changed successfully"}), 200
 
+@auth_bp.patch("/drivers/<int:driver_id>/deactivate")
+@role_required("manager")
+@password_change_required
+def deactivate_driver_route(driver_id:int):
+    try:
+        service.deactivate_driver(driver_id)
+    except UserNotFoundError as err:
+        return jsonify({"error:str"}),404
+    except NotADriverError as err:
+        return jsonify({"error":str(err)}),400
+
+    return jsonify({"message": f"Driver {driver_id} deactivated"}), 200
+
 
 
 
