@@ -144,6 +144,37 @@ def invite_manager(
 
     return invitee
 
+def accept_invite(
+    token:str,
+    new_password:str
+) -> User:
+    """
+     Verifies signed invite token
+     Raises ValueError if expired/used/invalid
+     sets password_hash from new_password, and must_change_password to False
+     calls auth/login after if successful
+    """
+
+    user_id = _verify_invite_token(token)
+
+    try:
+        user= get_user_by_id(user_id)
+    except UserNotFoundError:
+        raise ValueError("Invalid or expired invite token")
+
+    if user.role != "manager":
+        raise ValueError("Invite or expired invite token")
+
+    if not user.must_change_password:
+        raise ValueError("Invite token has already been used")
+
+    user.password_hash = hash_password(new_password)
+    user.must_change_password = False
+    db.session.commit()
+
+    return user
+ 
+
 
 def authenticate_user(
     identifier:str,
