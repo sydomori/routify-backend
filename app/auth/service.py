@@ -173,6 +173,12 @@ def accept_invite(
     db.session.commit()
 
     return user
+
+def _generate_invite_token(
+    user_id:int
+) -> str:
+    serializer = URLSafeTimedSerializer(current_app.config["SECRET_KEY"])
+    return serializer.dumps(user_id, salt=_INVITE_TOKEN_SALT)
  
 
 
