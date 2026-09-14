@@ -113,5 +113,12 @@ def change_password(
     user.must_change_password = False
     db.session.commit()
 
+def get_driver_or_raise(
+    driver_id:int
+) -> User:
+    driver = get_user_by_id(driver_id)
+    if driver.role != "driver":
+        raise NotADriverError(f"User with id {driver_id} is a '{driver.role}' ")
+    return driver
 
    
