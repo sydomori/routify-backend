@@ -163,6 +163,17 @@ def deactivate_driver_route(driver_id:int):
     return jsonify({"message": f"Driver {driver_id} deactivated"}), 200
 
 
+@auth_bp.get("/me")
+@jwt_required
+def me_route():
+    user_id = int(get_jwt_identity())
+    try:
+        user = service.get_user_by_id(user_id)
+    except UserNotFoundError as err:
+        return jsonify({"error": str(err)}), 404
+
+    return jsonify(user_public_schema.dump(user)), 200
+
 
 
     
