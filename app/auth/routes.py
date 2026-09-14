@@ -91,4 +91,25 @@ def invite_manager_route():
         return jsonify({"error": str(err)}), 400
 
     return jsonify(user_public_schema.dump(invitee)), 201
+
+
+@auth_bp.post("/accept-invite")
+def accept_invite_route():
+    """
+     Public route — security comes from the signed, time-limited token in the body,
+     not from an Authorization header. Deliberately does not return a JWT; the invitee
+     logs in separately via /auth/login afterward
+    """
+
+    try:
+        data = accept_invite_schema.load(request.get_json(silent=True))
+    except ValidationError as err:
+        return jsonify({"error": "Invalid input", "details": err.messages}), 400
+
+    try:
+        user = service.accept_invite(data["token"],data["new_password"])
+    except ValueError as err:
+        return jsonify({"error": str(err)}), 400
+
+    return jsonify({"message": "Password set successfully - you can now log in.", "user": user_public_schema.dump(user)}), 200
     
