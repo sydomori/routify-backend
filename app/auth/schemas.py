@@ -20,3 +20,8 @@ class UserPublicSchema(Schema):
 class OnboardDriverSchema(Schema):
     name = fields.Str(required=True, validate=validate.Length(min=1, max=128))
     phone = fields.Str(required=True, validate=validate.Length(min=8, max=20))
+
+    
+class LoginSchema(Schema):
+    identifier = fields.Str(required=True) # phone for drivers, email for managers
+    password = fields.Str(required=True)
