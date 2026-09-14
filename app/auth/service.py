@@ -129,3 +129,17 @@ def get_driver_status(
     modules depend on this exact function."""
     driver = _get_driver_or_raise(driver_id)
     return driver.driver_status
+
+def set_driver_status(
+    driver_id:int,
+    status:str
+) -> None:
+    """Called by documents.service when review outcomes change"""
+    if status not in DRIVER_STATUSES:
+        raise InvalidDriverStatusError(
+            f"'{status}' is not valid driver_status (expect one of {DRIVER_STATUSES} )"
+        )
+
+    driver = _get_driver_or_raise(driver_id)
+    driver.driver_status = status
+    db.session.commit()
