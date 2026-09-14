@@ -4,7 +4,7 @@ from itsdangerous import URLSafeTimedSerializer, BadData
 
 from app.extensions import db
 from app.auth.models import User, ROLES, DRIVER_STATUSES
-from app.auth.utils import hash_password, verify_password, generate_password, normalize_phone
+from app.auth.utils import hash_password, verify_password, generate_temp_password, normalize_phone
 from app.auth.exceptions import(
     UserNotFoundError,
     DuplicateUserError,
@@ -104,6 +104,46 @@ def bootstrap_first_manager(
     db.session.add(manager)
     db.session.commit()
     return manager
+
+def invite_manager(
+    name:str,
+    phone:str,
+    email:str,
+    requesting_user:User
+) -> User:
+    """
+     requesting_user must have a role="manager" otherwise PermissionError is raised
+     Creates a User(role="manager,must_change_password=True) with a random password
+     Temp password never sent directly, only the invite link matters
+    """
+
+    if requesting_user.role != "manager":
+        raise PermissionError("Only managers can invite new managers")
+
+    normalized_phone = normalize_phone(phone)
+    _ensure_unique_contact(phone=normalized_phone, email=email)
+
+    throwaway_password = generate_temp_password()
+
+    invitee = User(
+        name=name.strip(),
+        phone=normalized_phone,
+        email=email.strip().lower(),
+        role="manager",
+        password_hash=hash_password(throwaway_password),
+        must_change_password=True,
+        driver_status=None,
+        is_active=True,
+    )
+    db.session.add(invitee)
+    db.session.commit()
+
+    token = _generate_invite_token(invitee.id)
+    invite_link = f"{current_app.config['FRONTEND_ORIGIN']}/accept-invite?token={token}"
+    _send_manager_invite_email(invitee,invite_link)
+
+    return invitee
+
 
 def authenticate_user(
     identifier:str,
