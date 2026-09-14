@@ -16,3 +16,7 @@ class UserPublicSchema(Schema):
     driver_status = fields.Str(dump_only=True, allow_none=True)
     is_active = fields.Bool(dump_only=True)
     created_at = fields.DateTime(dump_only=True)
+
+class OnboardDriverSchema(Schema):
+    name = fields.Str(required=True, validate=validate.Length(min=1, max=128))
+    phone = fields.Str(required=True, validate=validate.Length(min=8, max=20))
