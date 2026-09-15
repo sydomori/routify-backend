@@ -46,3 +46,33 @@ class TestOnboardDriver:
         # succeed (soft dependency), not raise ImportError up to the caller.
         driver = service.onboard_driver(name="Sam Driver", phone="+254711111111")
         assert driver.id is not None
+
+class TestAuthenticatedUser:
+    def test_correct_credentials_returns_user(self, manager):
+        result = service.authenticate_user(manager.email, "ManagerPass123")
+        assert result is not None
+        assert result.id == manager.id
+
+    def test_wrong_password_returns_none(self, manager):
+        assert service.authenticate_user(manager.email, "WrongPassword") is None
+
+    def test_unknown_identifier_returns_none(self):
+        assert service.authenticate_user("nobody@nowhere.test", "whatever") is None
+
+    def test_deactivated_user_returns_none(self, driver):
+        driver.is_active = False
+        from app.extensions import db
+        db.session.commit()
+        assert service.authenticate_user(driver.phone, "DriverPass123") is None
+
+    @pytest.mark.parametrize("identifier,password", [("", "x"), ("x", ""), ("", "")])
+    def test_empty_credentials_return_none(self, identifier, password):
+        assert service.authenticate_user(identifier, password) is None
+
+    def test_driver_can_authenticate_by_phone(self, driver):
+        result = service.authenticate_user(driver.phone, "DriverPass123")
+        assert result is not None
+
+    def test_manager_can_authenticate_by_email(self, manager):
+        result = service.authenticate_user(manager.email, "ManagerPass123")
+        assert result is not None
