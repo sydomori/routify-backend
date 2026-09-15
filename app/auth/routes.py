@@ -134,7 +134,7 @@ def login_route():
     ), 200
 
 @auth_bp.post("/change-password")
-@jwt_required
+@jwt_required()
 def change_password_route():
     try:
         data = change_password_schema.load(request.get_json(silent=True) or {})
@@ -164,7 +164,7 @@ def deactivate_driver_route(driver_id:int):
 
 
 @auth_bp.get("/me")
-@jwt_required
+@jwt_required()
 def me_route():
     user_id = int(get_jwt_identity())
     try:
