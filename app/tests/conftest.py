@@ -56,3 +56,8 @@ def make_user(db):
     return _make_user
 
 
+@pytest.fixture()
+def manager(make_user):
+    return make_user(role="manager", password="ManagerPass123")
+
+
