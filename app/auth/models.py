@@ -14,7 +14,7 @@ class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(128), nullable=False)
     phone = db.Column(db.String(20), unique=True, nullable=False)
-    email = db.Column(db.String(128), unique=True, nullable=False)
+    email = db.Column(db.String(128), unique=True, nullable=True)
     password_hash = db.Column(db.String(256), nullable=False)
     role = db.Column(db.String(20), nullable=False)
     must_change_password = db.Column(db.Boolean, default=True, nullable=False)
