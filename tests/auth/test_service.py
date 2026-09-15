@@ -76,3 +76,23 @@ class TestAuthenticatedUser:
     def test_manager_can_authenticate_by_email(self, manager):
         result = service.authenticate_user(manager.email, "ManagerPass123")
         assert result is not None
+
+
+class TestChangePassword:
+    def test_sets_must_change_password_false(self, driver):
+        driver.must_change_password = True
+        from app.extensions import db
+        db.session.commit()
+
+        service.change_password(driver.id, "BrandNewPassword1")
+
+        assert driver.must_change_password is False
+        assert verify_password("BrandNewPassword1", driver.password_hash) is True
+
+    def test_old_password_no_longer_works(self, driver):
+        service.change_password(driver.id, "BrandNewPassword1")
+        assert service.authenticate_user(driver.phone, "DriverPass123") is None
+
+    def test_unknown_user_id_raises(self):
+        with pytest.raises(UserNotFoundError):
+            service.change_password(99999, "whatever")
