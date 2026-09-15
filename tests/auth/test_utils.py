@@ -49,3 +49,24 @@ class TestTempPasswordHashing:
         # Not a proof of randomness, but catches an accidentally-deterministic implementation.
         passwords = {generate_temp_password() for _ in range(20)}
         assert len(passwords) == 20
+
+class TestPhoneNormalization:
+    @pytest.mark.parametrize(
+        "raw,expected",
+        [
+            ("+254711111111", "+254711111111"),
+            ("254711111111", "254711111111"),
+            ("+254 711 111 111", "+254711111111"),
+            ("+254-711-111-111", "+254711111111"),
+        ],
+    )
+    def test_valid_formats_normalize_correctly(self, raw, expected):
+        assert normalize_phone(raw) == expected
+
+    @pytest.mark.parametrize(
+        "invalid",
+        ["not-a-phone", "12345", "", "abc123456789", "+0123456789"],
+    )
+    def test_invalid_formats_raise_value_error(self, invalid):
+        with pytest.raises(ValueError):
+            normalize_phone(invalid)
