@@ -13,7 +13,7 @@ def role_required(*allowed_roles):
     """
 
     def decorator(fn):
-        @wraps(fn)
+        @wraps(fn) #copy original function name onto wrapper
         def wrapper(*args, **kwargs):
             verify_jwt_in_request()
             claims = get_jwt()

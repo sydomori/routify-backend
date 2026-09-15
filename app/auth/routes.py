@@ -28,7 +28,7 @@ auth_bp = Blueprint("auth", __name__)
 @password_change_required
 def onboard_driver_route():
     try:
-        data = onboard_driver_schema.load(request.get_json(silent=True))
+        data = onboard_driver_schema.load(request.get_json(silent=True or {}))
     except ValidationError as err:
         return jsonify({"error": "Invalid input", "details": err.messages}), 400
 
@@ -42,10 +42,10 @@ def onboard_driver_route():
 
     return jsonify(user_public_schema.dump(driver)), 201
 
-@auth_bp.post("/bootstrap-manager")
+@auth_bp.post("/bootstrap_manager")
 def bootstrap_manager_route():
     try:
-        data = bootstrap_manager_schema.load(request.get_son(silent=True))
+        data = bootstrap_manager_schema.load(request.get_json(silent=True) or {})
     except ValidationError as err:
         return jsonify({"error":"Invalid input", "details": err.messages}), 400
 
@@ -62,12 +62,12 @@ def bootstrap_manager_route():
 
     return jsonify(user_public_schema.dump(manager)), 201
 
-@auth_bp.post("/invite-manager")
+@auth_bp.post("/invite_manager")
 @role_required("manager")
 @password_change_required
 def invite_manager_route():
     try:
-        data = invite_manager_schema.load(request.get_json(silent=True))
+        data = invite_manager_schema.load(request.get_json(silent=True) or {})
     except ValidationError as err:
         return jsonify({"error": "Invalid input", "details": err.messages}), 400
 
@@ -102,7 +102,7 @@ def accept_invite_route():
     """
 
     try:
-        data = accept_invite_schema.load(request.get_json(silent=True))
+        data = accept_invite_schema.load(request.get_json(silent=True) or {})
     except ValidationError as err:
         return jsonify({"error": "Invalid input", "details": err.messages}), 400
 
@@ -137,13 +137,13 @@ def login_route():
 @jwt_required
 def change_password_route():
     try:
-        data = change_password_schema.load(request.get_json(silent=True))
+        data = change_password_schema.load(request.get_json(silent=True) or {})
     except ValidationError as err:
         return jsonify({"error": "Invalid input", "details": err.messages}), 400
 
     user_id = int(get_jwt_identity())
     try:
-        service.change_password(user_id, data=["new_password"])
+        service.change_password(user_id, data["new_password"])
     except UserNotFoundError as err:
         return jsonify({"error": str(err)}), 404
 
@@ -156,7 +156,7 @@ def deactivate_driver_route(driver_id:int):
     try:
         service.deactivate_driver(driver_id)
     except UserNotFoundError as err:
-        return jsonify({"error:str"}),404
+        return jsonify({"error":str}),404
     except NotADriverError as err:
         return jsonify({"error":str(err)}),400
 
