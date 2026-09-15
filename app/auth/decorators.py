@@ -3,8 +3,8 @@ from functools import wraps
 from flask import jsonify
 from flask_jwt_extended import verify_jwt_in_request, get_jwt_identity, get_jwt
 
-from auth.service import get_user_by_id
-from auth.exceptions import UserNotFoundError
+from app.auth.service import get_user_by_id
+from app.auth.exceptions import UserNotFoundError
 
 def role_required(*allowed_roles):
     """

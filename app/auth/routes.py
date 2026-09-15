@@ -11,7 +11,7 @@ from app.auth.exceptions import (
     UserNotFoundError
 )
 
-from auth.schemas import (
+from app.auth.schemas import (
     change_password_schema,
     login_schema,
     onboard_driver_schema,
