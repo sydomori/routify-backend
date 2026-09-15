@@ -63,3 +63,15 @@ def manager(make_user):
 @pytest.fixture()
 def driver(make_user):
     return make_user(role="driver", password="DriverPass123")
+
+@pytest.fixture()
+def auth_headers(app):
+    """ 
+    dynamically creates jwt headers for authenticated users passed during tests
+    allows you to test endpoints that require authentication or specific roles without manually writing token-generation logic in every test
+    """
+    def _auth_headers(user):# takes User object (id, role) and uses them to create a unique token
+        token = create_access_token(identity=str(user.id), additional_claims={"role": user.role})
+        return {"Authorization": f"Bearer {token}"}
+
+    return _auth_headers
