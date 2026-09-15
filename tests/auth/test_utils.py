@@ -30,3 +30,22 @@ class TestPasswordHashing:
     def test_verify_handles_empty_plaintext(self):
         hashed = hash_password("CorrectHorse1")
         assert verify_password("", hashed) is False
+
+class TestTempPasswordHashing:
+    def test_default_length_is_eight(self):
+        assert len(generate_temp_password()) == 8
+
+    def test_respects_custom_length(self):
+        assert len(generate_temp_password(length=12)) == 12
+
+    def test_excludes_visually_ambiguous_characters(self):
+        ambiguous = set("0O1lI")
+        # Generate a large sample rather than asserting on one draw — a single password
+        # not containing '0' proves nothing about whether '0' is excluded.
+        sample = "".join(generate_temp_password(length=64) for _ in range(20))
+        assert not (set(sample) & ambiguous)
+
+    def test_two_calls_produce_different_passwords(self):
+        # Not a proof of randomness, but catches an accidentally-deterministic implementation.
+        passwords = {generate_temp_password() for _ in range(20)}
+        assert len(passwords) == 20
