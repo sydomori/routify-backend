@@ -27,3 +27,32 @@ def db(app):
     return _db
 
 
+@pytest.fixture()
+def make_user(db):
+    """
+    factory function to create a user in the db
+    bypasses the api and directly creates a user in the db
+    """
+    counter = {"n": 0}
+    def _make_user(role="driver", password="Pass1234", **overrides):
+        counter["n"] += 1
+        n = counter["n"]
+        defaults = {
+            "name": f"Test {role.title()} {n}",
+            "phone": f"+25470000{n:04d}",
+            "email": f"{role}{n}@routify.test" if role == "manager" else None,
+            "role": role,
+            "password_hash": hash_password(password),
+            "must_change_password": False,
+            "driver_status": "pending_documents" if role == "driver" else None,
+            "is_active": True,
+        }
+        defaults.update(overrides)
+        user = User(**defaults)
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+    return _make_user
+
+
