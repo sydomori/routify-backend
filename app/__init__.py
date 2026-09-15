@@ -48,5 +48,6 @@ def _register_blueprints(app):
     """
     Register all blueprints for the application.
     """
-    pass
+    from app.auth.routes import auth_bp
+    app.register_blueprint(auth_bp,url_prefix="/api/auth")
     
