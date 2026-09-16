@@ -150,3 +150,18 @@ class TestAcceptInviteRoute:
         # Deliberately no Authorization header at all.
         response = client.post("/api/auth/accept-invite", json={"token": token, "new_password": "NewManagerPass1"})
         assert response.status_code == 200
+
+
+class TestMeRoute:
+    def test_returns_current_user(self, client, driver, auth_headers):
+        response = client.get("/api/auth/me", headers=auth_headers(driver))
+        assert response.status_code == 200
+        assert response.get_json()["id"] == driver.id
+
+    def test_requires_authentication(self, client):
+        response = client.get("/api/auth/me")
+        assert response.status_code == 401
+
+    def test_never_includes_password_hash(self, client, manager, auth_headers):
+        response = client.get("/api/auth/me", headers=auth_headers(manager))
+        assert "password_hash" not in response.get_json()
