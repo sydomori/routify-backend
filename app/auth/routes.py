@@ -156,7 +156,7 @@ def deactivate_driver_route(driver_id:int):
     try:
         service.deactivate_driver(driver_id)
     except UserNotFoundError as err:
-        return jsonify({"error":str}),404
+        return jsonify({"error":str(err)}),404
     except NotADriverError as err:
         return jsonify({"error":str(err)}),400
 
