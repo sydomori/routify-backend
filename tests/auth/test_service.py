@@ -266,3 +266,16 @@ class TestAcceptInvite:
         token = service._generate_invite_token(99999)
         with pytest.raises(ValueError):
             service.accept_invite(token, "SomePassword1")
+
+class TestEnsureUniqueContact:
+    def test_raises_on_duplicate_phone(self, driver):
+        with pytest.raises(DuplicateUserError):
+            service._ensure_unique_contact(phone=driver.phone)
+
+    def test_raises_on_duplicate_email(self, manager):
+        with pytest.raises(DuplicateUserError):
+            service._ensure_unique_contact(phone="+254799999999", email=manager.email)
+
+    def test_passes_for_genuinely_new_contact(self):
+        service._ensure_unique_contact(phone="+254799999999", email="brand-new@routify.test")
+        # No exception raised = success; nothing else to assert.
