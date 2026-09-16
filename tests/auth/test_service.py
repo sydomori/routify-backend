@@ -128,3 +128,20 @@ class TestDriverStatusGuards:
     def test_set_driver_status_on_manager_raises_not_a_driver(self, manager):
         with pytest.raises(NotADriverError):
             service.set_driver_status(manager.id, "verified")
+
+class TestDeactivateDriver:
+    def test_sets_is_active_false(self, driver):
+        service.deactivate_driver(driver.id)
+        assert driver.is_active is False
+
+    def test_deactivated_driver_cannot_authenticate(self, driver):
+        service.deactivate_driver(driver.id)
+        assert service.authenticate_user(driver.phone, "DriverPass123") is None
+
+    def test_on_manager_raises_not_a_driver(self, manager):
+        with pytest.raises(NotADriverError):
+            service.deactivate_driver(manager.id)
+
+    def test_unknown_id_raises(self):
+        with pytest.raises(UserNotFoundError):
+            service.deactivate_driver(99999)
