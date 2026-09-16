@@ -85,7 +85,7 @@ def bootstrap_first_manager(
      closes permanently the instance one manager exists
     """
 
-    if User.query.filer_by(role="manager").first() is not None:
+    if User.query.filter_by(role="manager").first() is not None:
         raise PermissionError("A manager already exists")
 
     normalized_phone = normalize_phone(phone)
