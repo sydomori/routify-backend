@@ -68,3 +68,45 @@ class TestDeactivateDriverRoute:
         other_manager = make_user(role="manager")
         response = client.patch(f"/api/auth/drivers/{other_manager.id}/deactivate", headers=auth_headers(manager))
         assert response.status_code == 400
+
+
+class TestInviteManagerRoute:
+    def test_manager_can_invite_manager(self, client, manager, auth_headers):
+        response = client.post(
+            "/api/auth/invite-manager",
+            json={"name": "Second", "phone": "+254700000002", "email": "second@routify.test"},
+            headers=auth_headers(manager),
+        )
+        assert response.status_code == 201
+        assert response.get_json()["must_change_password"] is True
+
+    def test_driver_cannot_invite_manager(self, client, driver, auth_headers):
+        response = client.post(
+            "/api/auth/invite-manager",
+            json={"name": "Second", "phone": "+254700000002", "email": "second@routify.test"},
+            headers=auth_headers(driver),
+        )
+        assert response.status_code == 403
+
+    def test_requires_authentication(self, client):
+        response = client.post(
+            "/api/auth/invite-manager",
+            json={"name": "Second", "phone": "+254700000002", "email": "second@routify.test"},
+        )
+        assert response.status_code == 401
+
+    def test_duplicate_email_returns_409(self, client, manager, auth_headers):
+        response = client.post(
+            "/api/auth/invite-manager",
+            json={"name": "Dupe", "phone": "+254700000009", "email": manager.email},
+            headers=auth_headers(manager),
+        )
+        assert response.status_code == 409
+
+    def test_invalid_email_returns_400(self, client, manager, auth_headers):
+        response = client.post(
+            "/api/auth/invite-manager",
+            json={"name": "Bad Email", "phone": "+254700000002", "email": "not-an-email"},
+            headers=auth_headers(manager),
+        )
+        assert response.status_code == 400
