@@ -45,3 +45,26 @@ def password_change_required(fn):
         return fn(*args, **kwargs)
 
     return wrapper
+
+class TestDeactivateDriverRoute:
+    def test_manager_can_deactivate_driver(self, client, manager, driver, auth_headers):
+        response = client.patch(f"/api/auth/drivers/{driver.id}/deactivate", headers=auth_headers(manager))
+        assert response.status_code == 200
+
+    def test_deactivated_driver_cannot_log_in(self, client, manager, driver, auth_headers):
+        client.patch(f"/api/auth/drivers/{driver.id}/deactivate", headers=auth_headers(manager))
+        response = client.post("/api/auth/login", json={"identifier": driver.phone, "password": "DriverPass123"})
+        assert response.status_code == 401
+
+    def test_driver_cannot_deactivate_another_driver(self, client, driver, auth_headers):
+        response = client.patch(f"/api/auth/drivers/{driver.id}/deactivate", headers=auth_headers(driver))
+        assert response.status_code == 403
+
+    def test_unknown_driver_id_returns_404(self, client, manager, auth_headers):
+        response = client.patch("/api/auth/drivers/99999/deactivate", headers=auth_headers(manager))
+        assert response.status_code == 404
+
+    def test_cannot_deactivate_a_manager_via_this_route(self, client, manager, make_user, auth_headers):
+        other_manager = make_user(role="manager")
+        response = client.patch(f"/api/auth/drivers/{other_manager.id}/deactivate", headers=auth_headers(manager))
+        assert response.status_code == 400
