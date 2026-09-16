@@ -23,7 +23,7 @@ from app.auth.schemas import (
 
 auth_bp = Blueprint("auth", __name__)
 
-@auth_bp.post("/onboard_driver")
+@auth_bp.post("/onboard-driver")
 @role_required("manager")
 @password_change_required
 def onboard_driver_route():
@@ -42,7 +42,7 @@ def onboard_driver_route():
 
     return jsonify(user_public_schema.dump(driver)), 201
 
-@auth_bp.post("/bootstrap_manager")
+@auth_bp.post("/bootstrap-manager")
 def bootstrap_manager_route():
     try:
         data = bootstrap_manager_schema.load(request.get_json(silent=True) or {})
@@ -62,7 +62,7 @@ def bootstrap_manager_route():
 
     return jsonify(user_public_schema.dump(manager)), 201
 
-@auth_bp.post("/invite_manager")
+@auth_bp.post("/invite-manager")
 @role_required("manager")
 @password_change_required
 def invite_manager_route():
