@@ -182,3 +182,40 @@ class TestBootstrapFirstManager:
             service.bootstrap_first_manager(
                 name="Bad", phone="not-a-phone", email="bad@routify.test", password="Pass12345"
             )
+
+class TestInviteManager:
+    def test_manager_can_invite_another_manager(self, manager):
+        invitee = service.invite_manager(
+            name="Second Manager",
+            phone="+254700000002",
+            email="second@routify.test",
+            requesting_user=manager,
+        )
+        assert invitee.role == "manager"
+        assert invitee.must_change_password is True
+
+    def test_driver_cannot_invite_a_manager(self, driver):
+        with pytest.raises(PermissionError):
+            service.invite_manager(
+                name="Nope", phone="+254700000003", email="nope@routify.test", requesting_user=driver
+            )
+
+    def test_duplicate_email_raises(self, manager):
+        with pytest.raises(DuplicateUserError):
+            service.invite_manager(
+                name="Dupe", phone="+254700000009", email=manager.email, requesting_user=manager
+            )
+
+    def test_duplicate_phone_raises(self, manager, driver):
+        with pytest.raises(DuplicateUserError):
+            service.invite_manager(
+                name="Dupe", phone=driver.phone, email="unique@routify.test", requesting_user=manager
+            )
+
+    def test_missing_communications_module_does_not_prevent_invite(self, manager):
+        # Same soft-dependency contract as onboard_driver — no communications/ module
+        # exists in this codebase yet, invite creation must still succeed.
+        invitee = service.invite_manager(
+            name="Second", phone="+254700000002", email="second@routify.test", requesting_user=manager
+        )
+        assert invitee.id is not None
