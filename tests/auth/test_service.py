@@ -219,3 +219,50 @@ class TestInviteManager:
             name="Second", phone="+254700000002", email="second@routify.test", requesting_user=manager
         )
         assert invitee.id is not None
+
+class TestAcceptInvite:
+    def test_valid_token_sets_password_and_clears_gate(self, manager):
+        invitee = service.invite_manager(
+            name="Second", phone="+254700000002", email="second@routify.test", requesting_user=manager
+        )
+        token = service._generate_invite_token(invitee.id)
+
+        result = service.accept_invite(token, "NewManagerPass1")
+
+        assert result.must_change_password is False
+        assert verify_password("NewManagerPass1", result.password_hash) is True
+
+    def test_accepted_user_can_then_authenticate(self, manager):
+        invitee = service.invite_manager(
+            name="Second", phone="+254700000002", email="second@routify.test", requesting_user=manager
+        )
+        token = service._generate_invite_token(invitee.id)
+        service.accept_invite(token, "NewManagerPass1")
+
+        assert service.authenticate_user("second@routify.test", "NewManagerPass1") is not None
+
+    def test_garbage_token_raises_value_error(self):
+        with pytest.raises(ValueError):
+            service.accept_invite("this-is-not-a-real-token", "SomePassword1")
+
+    def test_reusing_an_accepted_token_raises(self, manager):
+        invitee = service.invite_manager(
+            name="Second", phone="+254700000002", email="second@routify.test", requesting_user=manager
+        )
+        token = service._generate_invite_token(invitee.id)
+        service.accept_invite(token, "FirstPassword1")
+
+        with pytest.raises(ValueError):
+            service.accept_invite(token, "SecondPassword1")
+
+    def test_token_for_a_driver_is_rejected(self, driver):
+        # A token should only ever be generated for a manager by invite_manager(), but
+        # if one somehow points at a driver, acceptance must still refuse it.
+        token = service._generate_invite_token(driver.id)
+        with pytest.raises(ValueError):
+            service.accept_invite(token, "SomePassword1")
+
+    def test_token_for_nonexistent_user_is_rejected(self):
+        token = service._generate_invite_token(99999)
+        with pytest.raises(ValueError):
+            service.accept_invite(token, "SomePassword1")
