@@ -49,3 +49,44 @@ class TestLoginRoute:
     def test_response_never_includes_password_hash(self, client, manager):
         response = client.post("/api/auth/login", json={"identifier": manager.email, "password": "ManagerPass123"})
         assert "password_hash" not in response.get_json()["user"]
+
+
+class TestOnboardDriverRoute:
+    def test_manager_can_onboard_driver(self, client, manager, auth_headers):
+        response = client.post(
+            "/api/auth/onboard-driver",
+            json={"name": "Sam Driver", "phone": "+254711111111"},
+            headers=auth_headers(manager),
+        )
+        assert response.status_code == 201
+        body = response.get_json()
+        assert body["driver_status"] == "pending_documents"
+        assert body["must_change_password"] is True
+
+    def test_requires_authentication(self, client):
+        response = client.post("/api/auth/onboard-driver", json={"name": "Sam Driver", "phone": "+254711111111"})
+        assert response.status_code == 401
+
+    def test_driver_cannot_onboard_another_driver(self, client, driver, auth_headers):
+        response = client.post(
+            "/api/auth/onboard-driver",
+            json={"name": "New Driver", "phone": "+254711111112"},
+            headers=auth_headers(driver),
+        )
+        assert response.status_code == 403
+
+    def test_duplicate_phone_returns_409(self, client, manager, driver, auth_headers):
+        response = client.post(
+            "/api/auth/onboard-driver",
+            json={"name": "Dupe", "phone": driver.phone},
+            headers=auth_headers(manager),
+        )
+        assert response.status_code == 409
+
+    def test_invalid_phone_returns_400(self, client, manager, auth_headers):
+        response = client.post(
+            "/api/auth/onboard-driver",
+            json={"name": "Bad Phone", "phone": "not-a-phone"},
+            headers=auth_headers(manager),
+        )
+        assert response.status_code == 400
