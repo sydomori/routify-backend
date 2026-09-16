@@ -26,3 +26,26 @@ class TestBootstrapManagerRoute:
             json={"name": "Root", "phone": "+254700000001", "email": "root@routify.test", "password": "short"},
         )
         assert response.status_code == 400
+
+class TestLoginRoute:
+    def test_manager_login_succeeds(self, client, manager):
+        response = client.post("/api/auth/login", json={"identifier": manager.email, "password": "ManagerPass123"})
+        assert response.status_code == 200
+        assert "access_token" in response.get_json()
+
+    def test_driver_login_succeeds_with_phone(self, client, driver):
+        response = client.post("/api/auth/login", json={"identifier": driver.phone, "password": "DriverPass123"})
+        assert response.status_code == 200
+
+    def test_wrong_password_returns_401(self, client, manager):
+        response = client.post("/api/auth/login", json={"identifier": manager.email, "password": "wrong"})
+        assert response.status_code == 401
+
+    def test_unknown_identifier_returns_401_not_404(self, client):
+        response = client.post("/api/auth/login", json={"identifier": "nobody@nowhere.test", "password": "x"})
+        # Never leak whether an identifier exists via a different status code.
+        assert response.status_code == 401
+
+    def test_response_never_includes_password_hash(self, client, manager):
+        response = client.post("/api/auth/login", json={"identifier": manager.email, "password": "ManagerPass123"})
+        assert "password_hash" not in response.get_json()["user"]
