@@ -41,7 +41,7 @@ def password_change_required(fn):
             return jsonify({"error":"User not found"}), 404
 
         if user.must_change_password:
-            return jsonify({"error": "Password change required", "code": "password_change_required"}),404
+            return jsonify({"error": "Password change required", "code": "password_change_required"}),403
         return fn(*args, **kwargs)
 
     return wrapper
