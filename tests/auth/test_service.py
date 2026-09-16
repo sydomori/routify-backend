@@ -145,3 +145,11 @@ class TestDeactivateDriver:
     def test_unknown_id_raises(self):
         with pytest.raises(UserNotFoundError):
             service.deactivate_driver(99999)
+
+class TestGetUserById:
+    def test_returns_matching_user(self, driver):
+        assert service.get_user_by_id(driver.id).id == driver.id
+
+    def test_unknown_id_raises(self):
+        with pytest.raises(UserNotFoundError):
+            service.get_user_by_id(99999)
