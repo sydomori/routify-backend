@@ -21,6 +21,9 @@ def app():
         _db.session.remove() #close the db session. Clears out leftover database transactions
         _db.drop_all() #deletes tables & data created from the test leaving the db empty
 
+@pytest.fixture()
+def client(app):
+    return app.test_client()
 
 @pytest.fixture()
 def db(app):
