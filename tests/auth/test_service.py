@@ -153,3 +153,32 @@ class TestGetUserById:
     def test_unknown_id_raises(self):
         with pytest.raises(UserNotFoundError):
             service.get_user_by_id(99999)
+
+class TestBootstrapFirstManager:
+    def test_succeeds_when_no_managers_exist(self):
+        manager = service.bootstrap_first_manager(
+            name="Root", phone="+254700000001", email="root@routify.test", password="RootPass123"
+        )
+        assert manager.role == "manager"
+        assert manager.must_change_password is False
+        assert manager.is_active is True
+
+    def test_fails_once_a_manager_already_exists(self, manager):
+        with pytest.raises(PermissionError):
+            service.bootstrap_first_manager(
+                name="Second", phone="+254700000002", email="second@routify.test", password="Pass12345"
+            )
+
+    def test_duplicate_email_raises(self, manager):
+        # manager fixture already exists, so this should hit the "manager already exists"
+        # PermissionError before it ever gets to check email uniqueness — confirms ordering.
+        with pytest.raises(PermissionError):
+            service.bootstrap_first_manager(
+                name="Dupe", phone="+254700000003", email=manager.email, password="Pass12345"
+            )
+
+    def test_invalid_phone_raises_value_error(self):
+        with pytest.raises(ValueError):
+            service.bootstrap_first_manager(
+                name="Bad", phone="not-a-phone", email="bad@routify.test", password="Pass12345"
+            )
