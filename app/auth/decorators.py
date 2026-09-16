@@ -110,3 +110,43 @@ class TestInviteManagerRoute:
             headers=auth_headers(manager),
         )
         assert response.status_code == 400
+
+class TestAcceptInviteRoute:
+    def _invite_and_get_token(self, manager, invitee_email="second@routify.test"):
+        from app.auth import service
+        invitee = service.invite_manager(
+            name="Second", phone="+254700000002", email=invitee_email, requesting_user=manager
+        )
+        return service._generate_invite_token(invitee.id)
+
+    def test_valid_token_succeeds(self, client, manager):
+        token = self._invite_and_get_token(manager)
+        response = client.post("/api/auth/accept-invite", json={"token": token, "new_password": "NewManagerPass1"})
+        assert response.status_code == 200
+
+    def test_does_not_return_an_access_token(self, client, manager):
+        token = self._invite_and_get_token(manager)
+        response = client.post("/api/auth/accept-invite", json={"token": token, "new_password": "NewManagerPass1"})
+        assert "access_token" not in response.get_json()
+
+    def test_invitee_can_log_in_afterward(self, client, manager):
+        token = self._invite_and_get_token(manager)
+        client.post("/api/auth/accept-invite", json={"token": token, "new_password": "NewManagerPass1"})
+        response = client.post("/api/auth/login", json={"identifier": "second@routify.test", "password": "NewManagerPass1"})
+        assert response.status_code == 200
+
+    def test_garbage_token_returns_400(self, client):
+        response = client.post("/api/auth/accept-invite", json={"token": "garbage", "new_password": "NewManagerPass1"})
+        assert response.status_code == 400
+
+    def test_reused_token_returns_400(self, client, manager):
+        token = self._invite_and_get_token(manager)
+        client.post("/api/auth/accept-invite", json={"token": token, "new_password": "FirstPass1"})
+        response = client.post("/api/auth/accept-invite", json={"token": token, "new_password": "SecondPass1"})
+        assert response.status_code == 400
+
+    def test_is_a_public_route_no_auth_header_needed(self, client, manager):
+        token = self._invite_and_get_token(manager)
+        # Deliberately no Authorization header at all.
+        response = client.post("/api/auth/accept-invite", json={"token": token, "new_password": "NewManagerPass1"})
+        assert response.status_code == 200
