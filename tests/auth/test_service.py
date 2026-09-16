@@ -96,3 +96,35 @@ class TestChangePassword:
     def test_unknown_user_id_raises(self):
         with pytest.raises(UserNotFoundError):
             service.change_password(99999, "whatever")
+
+class TestDriverStatusGuards:
+    """These two functions are called directly by trucks/trips/documents modules —
+    their exact behavior is a cross-module contract, not just an implementation detail."""
+
+    def test_get_driver_status_returns_current_status(self, driver):
+        assert service.get_driver_status(driver.id) == "pending_documents"
+
+    def test_get_driver_status_on_manager_raises_not_a_driver(self, manager):
+        with pytest.raises(NotADriverError):
+            service.get_driver_status(manager.id)
+
+    def test_get_driver_status_unknown_id_raises(self):
+        with pytest.raises(UserNotFoundError):
+            service.get_driver_status(99999)
+
+    def test_set_driver_status_updates_value(self, driver):
+        service.set_driver_status(driver.id, "verified")
+        assert service.get_driver_status(driver.id) == "verified"
+
+    @pytest.mark.parametrize("status", ["pending_documents", "pending_review", "verified", "rejected"])
+    def test_set_driver_status_accepts_all_valid_values(self, driver, status):
+        service.set_driver_status(driver.id, status)
+        assert service.get_driver_status(driver.id) == status
+
+    def test_set_driver_status_rejects_invalid_value(self, driver):
+        with pytest.raises(InvalidDriverStatusError):
+            service.set_driver_status(driver.id, "not_a_real_status")
+
+    def test_set_driver_status_on_manager_raises_not_a_driver(self, manager):
+        with pytest.raises(NotADriverError):
+            service.set_driver_status(manager.id, "verified")
