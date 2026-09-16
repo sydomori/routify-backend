@@ -90,3 +90,15 @@ class TestOnboardDriverRoute:
             headers=auth_headers(manager),
         )
         assert response.status_code == 400
+
+class TestPasswordChangeGate:
+    def test_blocks_gated_route_until_password_changed(self, client, make_user, auth_headers):
+        manager_needing_change = make_user(role="manager", must_change_password=True)
+        response = client.post(
+            "/api/auth/onboard-driver",
+            json={"name": "Sam Driver", "phone": "+254711111111"},
+            headers=auth_headers(manager_needing_change),
+        )
+        print("STATUS:", response.status_code)
+        print("BODY:", response.get_json())
+        assert response.status_code == 403
